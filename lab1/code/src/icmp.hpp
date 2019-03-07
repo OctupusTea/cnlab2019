@@ -38,7 +38,7 @@ namespace traceroute
 			void DoChecksum( );
 
 		public:
-			ICMP( const uint16_t &sequence = 1, const string &data, const uint8_t &type = ICMP_ECHO_REQUEST );
+			ICMP( const uint16_t &sequence = 1, const string &data = "", const uint8_t &type = ICMP_ECHO_REQUEST );
 
 			const uint8_t& Type( ) const { return type; }
 			void Type( const uint8_t &type ) { this -> type = type; }
