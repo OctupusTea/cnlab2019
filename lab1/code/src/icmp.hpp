@@ -12,7 +12,7 @@ extern "C"
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <fctnl.h>
+#include <fcntl.h>
 #include <netdb.h>
 
 }
@@ -20,7 +20,7 @@ extern "C"
 #define ICMP_ECHO_REPLY 0
 #define ICMP_ECHO_REQUEST 8
 
-using namespace std::string;
+using std::string;
 
 namespace traceroute
 {
@@ -56,6 +56,6 @@ namespace traceroute
 
 			const string& Data( ) const { return data; }
 			void Data( const string &data ) { this -> data = data; }
-}
+};
 
 #endif
