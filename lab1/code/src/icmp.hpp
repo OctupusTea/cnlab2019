@@ -56,6 +56,8 @@ namespace traceroute
 
 			const string& Data( ) const { return data; }
 			void Data( const string &data ) { this -> data = data; }
-};
-
+			
+			const string& Content( ) const;
+	};
+}
 #endif

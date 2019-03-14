@@ -25,9 +25,29 @@ namespace traceroute
 		sum += id;
 		sum += sequence;
 
-		for( auto &i : data ) 
+		for( size_t i = 0; i < data.length( ); i += 2 ) 
 		{
-			sum += 
+			sum += static_cast<uint16_t>( data[ i ] ) << 8;
+			sum += data[ i + 1 ];
 		}
+
+		if( data.length( ) % 2 == 1 )
+		{
+			sum += data.back( );
+		}
+
+		checksum = ~( ( sum & 0xFFFF ) + ( ( sum & 0xFFFF0000 ) >> 16 ) );
+	}
+
+	const string& ICMP::Content( ) const
+	{
+		string content = "";
+
+		StringAppend( content, type );
+		StringAppend( content, code );
+		StringAppend( content, checksum );
+		StringAppend( content, id );
+		StringAppend( content, sequence );
+		content += data;
 	}
 }
