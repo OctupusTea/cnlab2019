@@ -7,14 +7,27 @@ using std::string;
 
 namespace traceroute
 {
-	ICMP::ICMP( const uint16_t &sequence, const string &data, const uint8_t &type ) :
-		type( type ), code( 0 ),
-		sequence( sequence )
+	ICMP::ICMP( const uint16_t &sequence, const string &data,
+			const uint8_t &type ) : type( type ), code( 0 ),
+			sequence( sequence )
 	{
 		id = RandomInt16( );
 		this -> data = data;
 
 		DoChecksum( );
+	}
+
+	ICMP::ICMP( const string &content )
+	{
+		size_t pos = 0;
+
+		pos = StringGet( content, type, pos );
+		pos = StringGet( content, code, pos );
+		pos = StringGet( content, checksum, pos );
+		pos = StringGet( content, id, pos );
+		pos = StringGet( content, sequence, pos );
+
+		data = content.substr( pos );
 	}
 
 	void ICMP::DoChecksum( )
@@ -39,7 +52,7 @@ namespace traceroute
 		checksum = ~( ( sum & 0xFFFF ) + ( ( sum & 0xFFFF0000 ) >> 16 ) );
 	}
 
-	const string& ICMP::Content( ) const
+	const string ICMP::Content( ) const
 	{
 		string content = "";
 
@@ -49,5 +62,7 @@ namespace traceroute
 		StringAppend( content, id );
 		StringAppend( content, sequence );
 		content += data;
+
+		return content;
 	}
 }

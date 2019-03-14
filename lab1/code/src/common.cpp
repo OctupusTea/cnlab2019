@@ -28,4 +28,53 @@ namespace traceroute
 		data += static_cast<char>( ( value << 16 ) >> 24 );
 		data += static_cast<char>( value & 0xFFFF );
 	}
+
+	size_t StringGet( const string &data, uint8_t &value, const size_t &pos )
+	{
+		if( pos >= data.length( ) )
+		{
+			value = -1;
+			return pos;
+		}
+		else
+		{
+			value = static_cast<uint8_t>( data[ pos ] );
+
+			return pos + 1;
+		}
+	}
+
+	size_t StringGet( const string &data, uint16_t &value, const size_t &pos )
+	{
+		if( pos + 1 >= data.length( ) )
+		{
+			value = -1;
+			return pos;
+		}
+		else
+		{
+			value = static_cast<uint8_t>( data[ pos ] ) << 8;
+			value += static_cast<uint8_t>( data[ pos ] );
+
+			return pos + 2;
+		}
+	}
+
+	size_t StringGet( const string &data, uint32_t &value, const size_t &pos )
+	{
+		if( pos + 3 >= data.length( ) )
+		{
+			value = -1;
+			return pos;
+		}
+		else
+		{
+			value = static_cast<uint8_t>( data[ pos ] ) << 24;
+			value = static_cast<uint8_t>( data[ pos ] ) << 16;
+			value = static_cast<uint8_t>( data[ pos ] ) << 8;
+			value = static_cast<uint8_t>( data[ pos ] );
+
+			return pos + 4;
+		}
+	}
 }

@@ -36,9 +36,12 @@ namespace traceroute
 			string data;
 
 			void DoChecksum( );
+			uint16_t ComputeChecksum( );
 
 		public:
-			ICMP( const uint16_t &sequence = 1, const string &data = "", const uint8_t &type = ICMP_ECHO_REQUEST );
+			ICMP( const uint16_t &sequence = 1, const string &data = "",
+					const uint8_t &type = ICMP_ECHO_REQUEST );
+			ICMP( const string &content = "" );
 
 			const uint8_t& Type( ) const { return type; }
 			void Type( const uint8_t &type ) { this -> type = type; }
@@ -46,6 +49,7 @@ namespace traceroute
 			const uint8_t& Code( ) const { return code; }
 
 			const uint16_t& Checksum( ) const { return checksum; }
+			bool CheckChecksum( );
 
 			const uint16_t& Id( ) const { return id; }
 			void GenerateId( );
@@ -57,7 +61,7 @@ namespace traceroute
 			const string& Data( ) const { return data; }
 			void Data( const string &data ) { this -> data = data; }
 			
-			const string& Content( ) const;
+			const string Content( ) const;
 	};
 }
 #endif
