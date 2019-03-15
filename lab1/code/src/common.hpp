@@ -24,6 +24,7 @@ using std::default_random_engine;
 using std::uniform_int_distribution;
 
 using std::string;
+using std::to_string;
 
 namespace traceroute
 {
@@ -32,7 +33,7 @@ namespace traceroute
 		uint32_t numFormat;
 		uint8_t dotFormat[ 4 ];
 
-		Ip( const uint32_t ip )
+		Ip( const uint32_t ip = 0 )
 		{
 			numFormat = ip;
 		}
@@ -45,12 +46,35 @@ namespace traceroute
 			}
 		}
 
+		Ip( const string &ipString )
+		{
+			size_t pos = 0;
+
+			for( int i = 0; i < 4; ++i )
+			{
+				size_t next;
+				dotFormat[ i ] = stoi( ipString.substr( pos ), &next );
+				pos += next + 1;
+			}
+		}
+
 		void SetDotFormat( const uint8_t ip[ 4 ] )
 		{
 			for( int i = 0; i < 4; ++i )
 			{
 				dotFormat[ i ] = ip[ i ];
 			}
+		}
+
+		const uint8_t& operator[] ( int i ) const
+		{
+			return dotFormat[ i ];
+		}
+
+		friend string to_string( const Ip &ip )
+		{
+			return to_string( ip[ 0 ] ) + ' ' + to_string( ip[ 1 ] ) + ' ' +
+				to_string( ip[ 2 ] ) + ' ' + to_string( ip[ 3 ] );
 		}
 	};
 
@@ -72,8 +96,12 @@ namespace traceroute
 	size_t StringGet( const string &data, uint32_t &value,
 			const size_t &pos = 0 );
 
-	const Ip DnsIp( const string &hostName );
-	const string DnsName( const Ip &hostIp );
+	const Ip Dns( const string &hostName );
+	const string Dns( const Ip &hostIp );
+
+	const sockaddr_in BuildSockaddr( const string &hostName,
+			const uint16_t &port );
+	const sockaddr_in BuildSockaddr( const Ip &ip, const uint16_t &port );
 }
 
 #endif

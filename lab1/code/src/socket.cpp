@@ -29,8 +29,9 @@ namespace traceroute
 	}
 
 	IcmpSocket::IcmpSocket( const string &hostName, const uint16_t &hostPort,
-			const uint32_t &ttl ) : hostName( hostName ), hostNameValid( true ),
-			hostIp( DnsIp( hostName ) ), hostPort( hostPort ), ttl( ttl )
+			const uint32_t &ttl ) : hostName( hostName ),
+			hostNameValid( true ), hostIp( Dns( hostName ) ),
+			hostPort( hostPort ), ttl( ttl )
 	{
 		SocketCreate( );
 	}
@@ -43,8 +44,10 @@ namespace traceroute
 
 	bool IcmpSocket::Send( const string &content )
 	{
-		size_t bytes_sent = send( socketFd, content.c_str( ),
-				content.length( ), 0 );
+		sockaddr_in sockAddr = BuildSockaddr( hostName, hostPort );
+		size_t bytes_sent = sendto( socketFd, content.c_str( ),
+				content.length( ), 0, reinterpret_cast<sockaddr*>( &sockAddr ),
+				sizeof( sockAddr ) );
 
 		return ( bytes_sent == content.length( ) );
 	}
@@ -57,7 +60,11 @@ namespace traceroute
 	bool IcmpSocket::Recv( string &content )
 	{
 		content.resize( 65536 );
-		size_t bytes_recv = recv( socketFd, &( content[ 0 ] ), 65536, 0 );
+
+		sockaddr_in sockAddr = BuildSockaddr( hostName, hostPort );
+		socklen_t addrLength = sizeof( sockAddr );
+		size_t bytes_recv = recvfrom( socketFd, &( content[ 0 ] ), 65536, 0,
+				reinterpret_cast<sockaddr*>( &sockAddr ), &addrLength );
 
 		return ( bytes_recv > 0 );
 	}

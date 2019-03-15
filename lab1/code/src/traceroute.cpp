@@ -3,6 +3,9 @@
 
 #include <iostream>
 #include <string>
+#include <chrono>
+
+using namespace std::chrono;
 
 using std::string;
 using std::cin;

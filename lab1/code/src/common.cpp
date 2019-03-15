@@ -5,6 +5,7 @@
 #include <random>
 
 #include <cstdint>
+#include <cstdio>
 
 using std::string;
 
@@ -76,5 +77,46 @@ namespace traceroute
 
 			return pos + 4;
 		}
+	}
+
+	const Ip Dns( const string &hostName )
+	{
+		FILE *dnsPipe = popen( ( "dnsip " + hostName ).c_str( ), "r" );
+		string ipString = string( 16, '\0' );
+		fread( &( ipString[ 0 ] ), 1, 16, dnsPipe );
+
+		return Ip( ipString );
+	}
+
+	const string Dns( const Ip &ip )
+	{
+		FILE *dnsPipe = popen( ( "dnsname" + to_string( ip ) ).c_str( ), "r" );
+		string hostName = string ( 65536, '\0' );
+		fread( &( hostName[ 0 ] ), 1, 65535, dnsPipe );
+
+		return hostName;
+	}
+
+	const sockaddr_in BuildSockaddr( const string &hostName,
+			const uint16_t &port )
+	{
+		sockaddr_in sockAddr;
+
+		sockAddr.sin_family = AF_INET;
+		sockAddr.sin_addr = { Dns( hostName ).numFormat };
+		sockAddr.sin_port = port;
+
+		return sockAddr;
+	}
+
+	const sockaddr_in BuildSockaddr( const Ip &ip, const uint16_t &port )
+	{
+		sockaddr_in sockAddr;
+
+		sockAddr.sin_family = AF_INET;
+		sockAddr.sin_addr = { ip.numFormat };
+		sockAddr.sin_port = port;
+
+		return sockAddr;
 	}
 }
