@@ -9,6 +9,8 @@
 #include <chrono>
 #include <vector>
 
+#include <cmath>
+
 using namespace std::chrono;
 
 using std::vector;
@@ -66,19 +68,19 @@ namespace traceroute
 	}
 
 	Icmp_Status RegularPacketHandler( ICMP &icmp, string &ipString,
-			string &timeString, system_clock::time_point timeSent )
+			string &timeString, system_clock::time_point &timeSent )
 	{
 #ifdef DEBUG
 		clog << "origin: ( " << id << " , " << seq << " )" << endl;
 		clog << "icmp: ( " << icmp.Id( ) << " , " << icmp.Sequence( ) << " )" << endl;
 #endif
 
-		if( icmp.Id( ) != id or icmp.Sequence( ) != seq )
+		/*if( icmp.Id( ) != id or icmp.Sequence( ) != seq )
 		{
 			ipString = "255.255.255.255";
 			timeString = "NaN";
 			return ICMP_AGAIN;
-		}
+		}*/
 
 		ipString = to_string( IpFromICMP( icmp ) );
 
@@ -92,21 +94,21 @@ namespace traceroute
 	}
 
 	Icmp_Status TimeoutPacketHandler( ICMP &icmp, string &ipString,
-			string &timeString, system_clock::time_point timeSent )
+			string &timeString, system_clock::time_point &timeSent )
 	{
 #ifdef DEBUG_PACKET
 		cout << "data============";
 		cout << icmp.Data( ).substr( 0, 128 );
 		cout << "===============" << endl;
 #endif
-		uint32_t temp = static_cast<uint32_t>( icmp.Data( )[ 44 ] );
+		uint16_t temp = static_cast<uint8_t>( icmp.Data( )[ 44 ] );
 		temp <<= 8;
-		temp += static_cast<uint32_t>( icmp.Data( )[ 45 ] );
+		temp += static_cast<uint8_t>( icmp.Data( )[ 45 ] );
 		icmp.Id( temp );
 
-		temp = static_cast<uint32_t>( icmp.Data( )[ 46 ] );
+		temp = static_cast<uint8_t>( icmp.Data( )[ 46 ] );
 		temp <<= 8;
-		temp += static_cast<uint32_t>( icmp.Data( )[ 47 ] );
+		temp += static_cast<uint8_t>( icmp.Data( )[ 47 ] );
 		icmp.Sequence( temp );
 
 		return RegularPacketHandler( icmp, ipString, timeString, timeSent );
@@ -120,37 +122,47 @@ namespace traceroute
 		icmpSocket.Send( icmp_send, ttl );
 
 		ICMP icmp_recv = ICMP( );
-		if( icmpSocket.Recv( icmp_recv ) )
+
+		Icmp_Status stat = ICMP_AGAIN;
+
+		while( stat == ICMP_AGAIN )
 		{
-			switch( icmp_recv.Type( ) )
+			if( icmpSocket.Recv( icmp_recv ) )
 			{
-				case ICMP_TIME_EXCEEDED:
-					return TimeoutPacketHandler( icmp_recv, ipString,
-								timeString, start );
+				switch( icmp_recv.Type( ) )
+				{
+					case ICMP_TIME_EXCEEDED:
+						stat = TimeoutPacketHandler( icmp_recv, ipString,
+									timeString, start );
+						break;
 
-				case ICMP_ECHO_REPLY:
-					if( RegularPacketHandler ( icmp_recv, ipString,
-								timeString, start ) == ICMP_SUCC )
-					{
-						return ICMP_FINAL;
-					}
-					else
-					{
-						return ICMP_AGAIN;
-					}
+					case ICMP_ECHO_REPLY:
+						if( RegularPacketHandler ( icmp_recv, ipString,
+									timeString, start ) == ICMP_SUCC )
+						{
+							stat = ICMP_FINAL;
+						}
+						else
+						{
+							stat = ICMP_AGAIN;
+						}
+						break;
 
-				default:
-					clog << "Error / Request Type = "
-						<< int( icmp_recv.Type( ) ) << endl;
-					return ICMP_SUCC;
+					default:
+						clog << "Error / Request Type = "
+							<< int( icmp_recv.Type( ) ) << endl;
+						stat = ICMP_SUCC;
+				}
+			}
+			else
+			{
+				ipString = "0.0.0.0";
+				timeString = "*";
+				stat = ICMP_SUCC;
 			}
 		}
-		else
-		{
-			ipString = "0.0.0.0";
-			timeString = "*";
-			return ICMP_SUCC;
-		}
+
+		return stat;
 	}
 
 	int Main( int argc, char **argv )
@@ -189,7 +201,8 @@ namespace traceroute
 					output[ 0 ] = ipString;
 				}
 
-				output[ i + 1 ] = timeString + " ms";
+				output[ i + 1 ] = timeString +
+					( timeString == "*" ? "" : " ms" );
 
 				if( stat == ICMP_FINAL )
 				{
