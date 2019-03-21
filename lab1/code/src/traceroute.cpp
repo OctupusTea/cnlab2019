@@ -45,6 +45,21 @@ namespace traceroute
 			return 1;
 		}
 
+		IcmpSocket icmpSocket( targetIp );
+
+		ICMP icmp( 1 );
+		cout << icmp << endl;
+		icmpSocket.Send( icmp, 1 );
+
+		if( icmpSocket.Recv( icmp ) )
+		{
+			cout << icmp << endl;
+		}
+		else
+		{
+			cout << "icmp failed." << endl;
+		}
+
 		return 0;
 	}
 }

@@ -115,25 +115,22 @@ namespace traceroute
 		return hostName;
 	}
 
-	const sockaddr_in BuildSockaddr( const string &hostName,
-			const uint16_t &port )
+	const sockaddr_in BuildSockaddr( const string &hostName )
 	{
 		sockaddr_in sockAddr;
 
 		sockAddr.sin_family = AF_INET;
 		sockAddr.sin_addr = { Dns( hostName ).numFormat };
-		sockAddr.sin_port = port;
 
 		return sockAddr;
 	}
 
-	const sockaddr_in BuildSockaddr( const Ip &ip, const uint16_t &port )
+	const sockaddr_in BuildSockaddr( const Ip &ip )
 	{
 		sockaddr_in sockAddr;
 
 		sockAddr.sin_family = AF_INET;
 		sockAddr.sin_addr = { ip.numFormat };
-		sockAddr.sin_port = port;
 
 		return sockAddr;
 	}

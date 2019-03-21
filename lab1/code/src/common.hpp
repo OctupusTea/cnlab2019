@@ -98,9 +98,8 @@ namespace traceroute
 	const Ip Dns( const string &hostName );
 	const string Dns( const Ip &hostIp );
 
-	const sockaddr_in BuildSockaddr( const string &hostName,
-			const uint16_t &port );
-	const sockaddr_in BuildSockaddr( const Ip &ip, const uint16_t &port );
+	const sockaddr_in BuildSockaddr( const string &hostName );
+	const sockaddr_in BuildSockaddr( const Ip &ip );
 }
 
 #endif

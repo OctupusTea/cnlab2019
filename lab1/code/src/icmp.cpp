@@ -1,8 +1,13 @@
+#include <iostream>
 #include <string>
 
 #include "icmp.hpp"
 #include "common.hpp"
 
+using std::clog;
+using std::endl;
+
+using std::ostream;
 using std::string;
 
 namespace traceroute
@@ -32,6 +37,11 @@ namespace traceroute
 
 	void ICMP::DoChecksum( )
 	{
+		checksum = ComputeChecksum( );
+	}
+
+	uint16_t ICMP::ComputeChecksum( )
+	{
 		uint32_t sum = 0;
 
 		sum += ( static_cast<uint16_t>( type ) << 8 ) + code;
@@ -49,7 +59,7 @@ namespace traceroute
 			sum += data.back( );
 		}
 
-		checksum = ~( ( sum & 0xFFFF ) + ( ( sum & 0xFFFF0000 ) >> 16 ) );
+		return ~( ( sum & 0xFFFF ) + ( ( sum & 0xFFFF0000 ) >> 16 ) );
 	}
 
 	const string ICMP::Content( ) const
@@ -64,5 +74,14 @@ namespace traceroute
 		content += data;
 
 		return content;
+	}
+
+	ostream& operator<<( ostream &output, const ICMP &icmp )
+	{
+		output << "( " << int(icmp.type) << " , " << int(icmp.code) << " , "
+			<< icmp.checksum << " , " << icmp.id << " , " << icmp.sequence
+			<< " , " << icmp.data << " )";
+
+		return output;
 	}
 }

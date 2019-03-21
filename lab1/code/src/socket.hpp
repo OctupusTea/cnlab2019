@@ -31,21 +31,18 @@ namespace traceroute
 			string hostName;
 			bool hostNameValid;
 			Ip hostIp;
-			uint16_t hostPort;
-			uint32_t ttl;
 
 			void SocketCreate( );
 
-		public:
-			IcmpSocket( const Ip &hostIp, const uint16_t &hostPort = -1,
-					const uint32_t &ttl = 30 );
-			IcmpSocket( const string &hostName, const uint16_t &hostPort
-					= -1, const uint32_t &ttl = 30 );
-
-			bool Send( const string &content );
-			bool Send( const ICMP &icmp );
-			
+			bool Send( const string &content, const uint32_t &ttl );
 			bool Recv( string &content );
+
+		public:
+			IcmpSocket( const Ip &hostIp );
+			IcmpSocket( const string &hostName );
+
+			bool Send( const ICMP &icmp, const uint32_t &ttl );
+			
 			bool Recv( ICMP &icmp );
 	};
 }

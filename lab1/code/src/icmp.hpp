@@ -20,6 +20,7 @@ extern "C"
 #define ICMP_ECHO_REPLY 0
 #define ICMP_ECHO_REQUEST 8
 
+using std::ostream;
 using std::string;
 
 namespace traceroute
@@ -41,7 +42,7 @@ namespace traceroute
 		public:
 			ICMP( const uint16_t &sequence = 1, const string &data = "",
 					const uint8_t &type = ICMP_ECHO_REQUEST );
-			ICMP( const string &content = "" );
+			ICMP( const string &content );
 
 			const uint8_t& Type( ) const { return type; }
 			void Type( const uint8_t &type ) { this -> type = type; }
@@ -62,6 +63,8 @@ namespace traceroute
 			void Data( const string &data ) { this -> data = data; }
 			
 			const string Content( ) const;
+
+			friend ostream& operator<<( ostream &output, const ICMP &icmp );
 	};
 }
 #endif
