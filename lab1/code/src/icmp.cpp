@@ -3,6 +3,11 @@
 
 #include "icmp.hpp"
 #include "common.hpp"
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <netinet/ip_icmp.h>
+#include <arpa/inet.h>
 
 using std::clog;
 using std::endl;
@@ -22,17 +27,21 @@ namespace traceroute
 		DoChecksum( );
 	}
 
-	ICMP::ICMP( const string &content )
+	ICMP::ICMP( const string &buf )
 	{
-		size_t pos = 0;
-
-		pos = StringGet( content, type, pos );
-		pos = StringGet( content, code, pos );
-		pos = StringGet( content, checksum, pos );
-		pos = StringGet( content, id, pos );
-		pos = StringGet( content, sequence, pos );
-
-		data = content.substr( pos );
+// 		size_t pos = 0;
+// 
+// 		pos = StringGet( content, type, pos );
+// 		pos = StringGet( content, code, pos );
+// 		pos = StringGet( content, checksum, pos );
+// 		pos = StringGet( content, id, pos );
+// 		pos = StringGet( content, sequence, pos );
+// 
+// 		data = content.substr( pos );
+		struct iphdr *iphdrptr = (struct iphdr*)buf.data();
+		struct icmphdr *icmphdrptr =
+			(struct icmphdr*)(buf.data() + (iphdrptr->ihl) * 4);
+		type = icmphdrptr->type;
 	}
 
 	void ICMP::DoChecksum( )
