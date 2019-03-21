@@ -38,7 +38,7 @@ namespace traceroute
 			bool Recv( string &content );
 
 		public:
-			IcmpSocket( const Ip &hostIp );
+			IcmpSocket( const Ip &hostIp = Ip( static_cast<uint32_t>( 0 ) ) );
 			IcmpSocket( const string &hostName );
 
 			bool Send( const ICMP &icmp, const uint32_t &ttl );

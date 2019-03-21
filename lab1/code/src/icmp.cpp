@@ -24,11 +24,10 @@ using std::string;
 
 namespace traceroute
 {
-	ICMP::ICMP( const uint16_t &sequence, const string &data,
-			const uint8_t &type ) : type( type ), code( 0 ),
-			sequence( sequence )
+	ICMP::ICMP( const uint16_t id, const uint16_t &sequence,
+			const string &data, const uint8_t &type ) : type( type ),
+			code( 0 ), id( id ), sequence( sequence )
 	{
-		id = RandomInt16( );
 		this -> data = data;
 
 		DoChecksum( );

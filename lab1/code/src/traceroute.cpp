@@ -16,22 +16,26 @@ using std::string;
 using std::stringstream;
 using std::cin;
 using std::cout;
+using std::cerr;
 using std::clog;
 using std::endl;
 
 #ifdef DEBUG
 
-// #define DEBUG_PACKET
+#define DEBUG_PACKET
 
 #endif
 
 namespace traceroute
 {
+	enum Icmp_Status{ ICMP_AGAIN = -1, ICMP_SUCC = 0, ICMP_FINAL = 1 };
+
 	string targetName;
 	Ip targetIp;
 
-	extern IcmpSocket icmpSocket;
+	IcmpSocket icmpSocket;
 	uint16_t id;
+	uint16_t seq;
 	vector<string> output( 4, "" );
 
 	void Usage( )
@@ -61,28 +65,66 @@ namespace traceroute
 		return Ip( ip );
 	}
 
-	bool RegularPacketHandler( ICMP &icmp, string &ipString,
-			string &timeString )
+	Icmp_Status RegularPacketHandler( ICMP &icmp, string &ipString,
+			string &timeString, system_clock::time_point timeSent )
 	{
-		
+#ifdef DEBUG
+		clog << "origin: ( " << id << " , " << seq << " )" << endl;
+		clog << "icmp: ( " << icmp.Id( ) << " , " << icmp.Sequence( ) << " )" << endl;
+#endif
+
+		if( icmp.Id( ) != id or icmp.Sequence( ) != seq )
+		{
+			ipString = "255.255.255.255";
+			timeString = "NaN";
+			return ICMP_AGAIN;
+		}
+
+		ipString = to_string( IpFromICMP( icmp ) );
+
+		auto rtt = duration_cast<microseconds>
+			( system_clock::now( ) - timeSent );
+		stringstream temp;
+		temp << std::setprecision( 3 ) << double( rtt.count( ) ) / 1000.0;
+		timeString = temp.str( );
+
+		return ICMP_SUCC;
 	}
 
-	bool TimeoutPacketHandler( ICMP &icmp, string &ipString,
-			string &timeString )
+	Icmp_Status TimeoutPacketHandler( ICMP &icmp, string &ipString,
+			string &timeString, system_clock::time_point timeSent )
 	{
-		uint16_t temp = static_cast<uint16_t>( icmp.Data( )[ 44 ] ) << 8;
+#ifdef DEBUG_PACKET
+		cout << "data============";
+		cout << icmp.Data( ).substr( 0, 128 );
+		cout << "===============" << endl;
+#endif
+		uint16_t temp = static_cast<uint16_t>( icmp.Data( )[ 44 ] );
+		temp <<= 8;
+#ifdef DEBUG
+		clog << "temp = " << temp << endl;
+#endif
 		temp += static_cast<uint16_t>( icmp.Data( )[ 45 ] );
+#ifdef DEBUG
+		clog << "temp = " << temp << endl;
+#endif
 		icmp.Id( temp );
+#ifdef DEBUG
+		clog << "temp = " << temp << endl;
+#endif
 
-		temp = static_cast<uint16_t>( icmp.Data( )[ 45 ] ) << 8;
+		temp = static_cast<uint16_t>( icmp.Data( )[ 46 ] );
+		temp <<= 8;
 		temp += static_cast<uint16_t>( icmp.Data( )[ 47 ] );
-		icmp.Sequence( temp );
+		icmp.Sequence( temp + 256 );
 
-		return RegularPacketHandler( icmp, ipString, timeString );
+		return RegularPacketHandler( icmp, ipString, timeString, timeSent );
 	}
 
-	bool SendIcmp( int ttl, int seq, string &ipString, string &timeString )
+	Icmp_Status SendIcmp( int ttl, string &ipString, string &timeString )
 	{
+		system_clock::time_point start = system_clock::now( );
+
 		ICMP icmp_send( id, seq );
 		icmpSocket.Send( icmp_send, ttl );
 
@@ -92,20 +134,31 @@ namespace traceroute
 			switch( icmp_recv.Type( ) )
 			{
 				case ICMP_TIME_EXCEEDED:
-					return TimeoutPacketHandler( icmp, ipString, timeString );
+					return TimeoutPacketHandler( icmp_recv, ipString,
+								timeString, start );
+
 				case ICMP_ECHO_REPLY:
-					return RegularPacketHandler( icmp, ipString, timeString );
+					if( RegularPacketHandler ( icmp_recv, ipString,
+								timeString, start ) == ICMP_SUCC )
+					{
+						return ICMP_FINAL;
+					}
+					else
+					{
+						return ICMP_AGAIN;
+					}
+
 				default:
 					clog << "Error / Request Type = "
 						<< int( icmp_recv.Type( ) ) << endl;
-					return false;
+					return ICMP_SUCC;
 			}
 		}
 		else
 		{
 			ipString = "0.0.0.0";
 			timeString = "*";
-			return false;
+			return ICMP_SUCC;
 		}
 	}
 
@@ -123,20 +176,34 @@ namespace traceroute
 		for( int ttl = 1; ttl <= 30; ++ttl )
 		{
 			string ipString, timeString;
+			Icmp_Status stat = ICMP_AGAIN;
 
 			for( int i = 0; i < 3; ++i )
 			{
-				while( not SendIcmp( ttl, ttl * 3 + i, ipString, timeString ) )
+#ifdef DEBUG
+				clog << "Hop # " << ttl << " , i = " << i << endl;
+#endif
+				seq = ttl * 3 + i;
+
+				while( stat == ICMP_AGAIN )
 				{
-					//	empty
+					stat = SendIcmp( ttl, ipString, timeString );
+#ifdef DEBUG
+					clog << "stat = " << stat << endl;
+#endif
 				}
 
-				if( ipString != "0.0.0.0" )
+				if( ipString != "0.0.0.0" and ipString != "255.255.255.255" )
 				{
 					output[ 0 ] = ipString;
 				}
 
-				output[ i + 1 ] = timeString;
+				output[ i + 1 ] = timeString + " ms";
+
+				if( stat == ICMP_FINAL )
+				{
+					break;
+				}
 			}
 
 			cout << ttl;
@@ -145,6 +212,11 @@ namespace traceroute
 				cout << ' ' << output[ i ];
 			}
 			cout << endl;
+
+			if( stat == ICMP_FINAL )
+			{
+				break;
+			}
 		}
 		return 0;
 	}

@@ -40,10 +40,10 @@ namespace traceroute
 			uint16_t ComputeChecksum( );
 
 		public:
-			ICMP( const uint16_t id, const uint16_t &sequence = 1,
+			ICMP( const uint16_t id = 65535, const uint16_t &sequence = 1,
 					const string &data = "",
 					const uint8_t &type = ICMP_ECHO_REQUEST );
-			ICMP( const string &content = "" );
+			ICMP( const string &content );
 
 			const uint8_t& Type( ) const { return type; }
 			void Type( const uint8_t &type ) { this -> type = type; }
