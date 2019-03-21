@@ -6,6 +6,12 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <cstring>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
 
 #ifdef DEBUG
 using std::clog;
@@ -95,13 +101,45 @@ namespace traceroute
 
 	const Ip Dns( const string &hostName )
 	{
-		FILE *dnsPipe = popen( ( "dnsip " + hostName ).c_str( ), "r" );
-		string ipString = string( 16, '\0' );
-		fread( &( ipString[ 0 ] ), 1, 16, dnsPipe );
-#ifdef DEBUG
-		clog << "ipString = " << ipString << endl;
-#endif
-		return Ip( ipString );
+        struct addrinfo hints, *res, *p;
+        int status;
+        char ipstr[INET6_ADDRSTRLEN];
+
+
+        memset(&hints, 0, sizeof hints);
+        hints.ai_family = AF_UNSPEC;
+        hints.ai_socktype = SOCK_STREAM;
+
+        if ((status = getaddrinfo(hostName.c_str(), NULL, &hints, &res)) != 0) {
+            std::cerr << "getaddrinfo: " << gai_strerror(status) << std::endl;
+        }
+
+        string ip;
+        for(p = res;p != NULL; p = p->ai_next) {
+            void *addr;
+
+            if (p->ai_family == AF_INET) { // IPv4
+                struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
+                addr = &(ipv4->sin_addr);
+            } else { // IPv6
+                struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)p->ai_addr;
+                addr = &(ipv6->sin6_addr);
+            }
+
+            // convert the IP to a string and print it:
+            inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
+            ip = ipstr;
+        }
+
+        freeaddrinfo(res);
+		return Ip( ip );
+// 		FILE *dnsPipe = popen( ( "dnsip " + hostName ).c_str( ), "r" );
+// 		string ipString = string( 16, '\0' );
+// 		fread( &( ipString[ 0 ] ), 1, 16, dnsPipe );
+// #ifdef DEBUG
+// 		clog << "ipString = " << ipString << endl;
+// #endif
+// 		return Ip( ipString );
 	}
 
 	const string Dns( const Ip &ip )
