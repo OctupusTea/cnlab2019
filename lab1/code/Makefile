@@ -11,7 +11,7 @@ OBJ_DIR=obj
 SRC_DIR=src
 
 # Files
-_TRACEROUTE=traceroute socket icmp common
+_TRACEROUTE=traceroute
 _TRACEROUTE_OBJ=traceroute.o socket.o icmp.o common.o
 
 # Directed Files

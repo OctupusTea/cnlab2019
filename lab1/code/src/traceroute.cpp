@@ -22,7 +22,7 @@ using std::endl;
 
 #ifdef DEBUG
 
-#define DEBUG_PACKET
+// #define DEBUG_PACKET
 
 #endif
 
@@ -99,24 +99,15 @@ namespace traceroute
 		cout << icmp.Data( ).substr( 0, 128 );
 		cout << "===============" << endl;
 #endif
-		uint16_t temp = static_cast<uint16_t>( icmp.Data( )[ 44 ] );
+		uint32_t temp = static_cast<uint32_t>( icmp.Data( )[ 44 ] );
 		temp <<= 8;
-#ifdef DEBUG
-		clog << "temp = " << temp << endl;
-#endif
-		temp += static_cast<uint16_t>( icmp.Data( )[ 45 ] );
-#ifdef DEBUG
-		clog << "temp = " << temp << endl;
-#endif
+		temp += static_cast<uint32_t>( icmp.Data( )[ 45 ] );
 		icmp.Id( temp );
-#ifdef DEBUG
-		clog << "temp = " << temp << endl;
-#endif
 
-		temp = static_cast<uint16_t>( icmp.Data( )[ 46 ] );
+		temp = static_cast<uint32_t>( icmp.Data( )[ 46 ] );
 		temp <<= 8;
-		temp += static_cast<uint16_t>( icmp.Data( )[ 47 ] );
-		icmp.Sequence( temp + 256 );
+		temp += static_cast<uint32_t>( icmp.Data( )[ 47 ] );
+		icmp.Sequence( temp );
 
 		return RegularPacketHandler( icmp, ipString, timeString, timeSent );
 	}
