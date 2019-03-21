@@ -19,6 +19,7 @@ extern "C"
 
 #define ICMP_ECHO_REPLY 0
 #define ICMP_ECHO_REQUEST 8
+#define ICMP_TIME_EXCEEDED 11
 
 using std::ostream;
 using std::string;
@@ -53,6 +54,7 @@ namespace traceroute
 			bool CheckChecksum( );
 
 			const uint16_t& Id( ) const { return id; }
+			void Id( const uint16_t &id ) { this -> id = id; }
 			void GenerateId( );
 
 			const uint16_t& Sequence( ) const { return sequence; }

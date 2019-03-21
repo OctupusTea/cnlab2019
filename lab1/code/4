@@ -18,7 +18,7 @@ using std::endl;
 
 #ifdef DEBUG
 
-#define DEBUG_PACKET
+// #define DEBUG_PACKET
 
 #endif
 
@@ -72,8 +72,7 @@ namespace traceroute
 
 			for( int i = 0; i < 3; ++i )
 			{
-				icmp = ICMP( ttl * 3 + i );
-				icmp.Id( initId );
+				icmp.Sequence( ttl * 3 + i );
 #ifdef DEBUG_PACKET
 				cout << "icmp============";
 				cout << icmp.Content( ) << "========";

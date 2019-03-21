@@ -73,8 +73,8 @@ namespace traceroute
 
 		friend string to_string( const Ip &ip )
 		{
-			return to_string( ip[ 0 ] ) + ' ' + to_string( ip[ 1 ] ) + ' ' +
-				to_string( ip[ 2 ] ) + ' ' + to_string( ip[ 3 ] );
+			return to_string( ip[ 0 ] ) + '.' + to_string( ip[ 1 ] ) + '.' +
+				to_string( ip[ 2 ] ) + '.' + to_string( ip[ 3 ] );
 		}
 	};
 

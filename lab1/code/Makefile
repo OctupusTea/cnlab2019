@@ -23,6 +23,8 @@ default: clean all
 
 # Make all
 all: $(TRACEROUTE)
+	mkdir -p $(OBJ_DIR)
+	mkdir -p $(BIN_DIR)
 
 # Make traceroute
 traceroute: $(TRACEROUTE)

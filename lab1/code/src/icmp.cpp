@@ -9,11 +9,18 @@
 #include <netinet/ip_icmp.h>
 #include <arpa/inet.h>
 
+using std::cout;
 using std::clog;
 using std::endl;
 
 using std::ostream;
 using std::string;
+
+#ifdef DEBUG
+
+#define DEBUG_PACKET
+
+#endif
 
 namespace traceroute
 {
@@ -41,7 +48,18 @@ namespace traceroute
 		struct iphdr *iphdrptr = (struct iphdr*)buf.data();
 		struct icmphdr *icmphdrptr =
 			(struct icmphdr*)(buf.data() + (iphdrptr->ihl) * 4);
-		type = icmphdrptr->type;
+		
+		type = icmphdrptr -> type;
+		code = icmphdrptr -> code;
+		checksum = icmphdrptr -> checksum;
+		id = icmphdrptr -> un.echo.id;
+		sequence = icmphdrptr -> un.echo.sequence;
+		data = buf.substr( 8 );
+
+#ifdef DEBUG_PACKET
+		cout << "data============";
+		cout << data.substr( 0, 256 );
+#endif
 	}
 
 	void ICMP::DoChecksum( )
@@ -76,11 +94,29 @@ namespace traceroute
 		string content = "";
 
 		StringAppend( content, type );
+#ifdef DEBUG_PACKET
+		clog << content.length( ) << endl;
+#endif
 		StringAppend( content, code );
+#ifdef DEBUG_PACKET
+		clog << content.length( ) << endl;
+#endif
 		StringAppend( content, checksum );
+#ifdef DEBUG_PACKET
+		clog << content.length( ) << endl;
+#endif
 		StringAppend( content, id );
+#ifdef DEBUG_PACKET
+		clog << content.length( ) << endl;
+#endif
 		StringAppend( content, sequence );
+#ifdef DEBUG_PACKET
+		clog << content.length( ) << endl;
+#endif
 		content += data;
+#ifdef DEBUG_PACKET
+		clog << content.length( ) << endl;
+#endif
 
 		return content;
 	}

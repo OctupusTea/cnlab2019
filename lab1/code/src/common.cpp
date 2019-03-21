@@ -33,21 +33,21 @@ namespace traceroute
 
 	void StringAppend( string &data, const uint8_t &value )
 	{
-		data += static_cast<char>( value );
+		data.push_back( static_cast<char>( value ) );
 	}
 
 	void StringAppend( string &data, const uint16_t &value )
 	{
-		data += static_cast<char>( value >> 8 );
-		data += static_cast<char>( value & 0xFFFF );
+		data.push_back( static_cast<char>( value >> 8 ) );
+		data.push_back( static_cast<char>( value & 0xFFFF ) );
 	}
 
 	void StringAppend( string &data, const uint32_t &value )
 	{
-		data += static_cast<char>( value >> 24 );
-		data += static_cast<char>( ( value << 8 ) >> 24 );
-		data += static_cast<char>( ( value << 16 ) >> 24 );
-		data += static_cast<char>( value & 0xFFFF );
+		data.push_back( static_cast<char>( value >> 24 ) );
+		data.push_back( static_cast<char>( ( value << 8 ) >> 24 ) );
+		data.push_back( static_cast<char>( ( value << 16 ) >> 24 ) );
+		data.push_back( static_cast<char>( value & 0xFFFF ) );
 	}
 
 	size_t StringGet( const string &data, uint8_t &value, const size_t &pos )

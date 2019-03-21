@@ -2,9 +2,11 @@
 #include "icmp.hpp"
 #include "socket.hpp"
 
+#include <iostream>
 #include <string>
 
 #include <cstdint>
+#include <cstring>
 
 extern "C"
 {
@@ -16,6 +18,9 @@ extern "C"
 #include <netdb.h>
 
 }
+
+using std::clog;
+using std::endl;
 
 using std::string;
 
@@ -35,18 +40,26 @@ namespace traceroute
 
 	void IcmpSocket::SocketCreate( )
 	{
-		socketFd = socket( AF_INET, SOCK_RAW, IPPROTO_ICMP );
+		do
+		{
+			socketFd = socket( AF_INET, SOCK_RAW, IPPROTO_ICMP );
+		}while( socketFd == -1 );
 	}
 
 	bool IcmpSocket::Send( const string &content, const uint32_t &ttl )
 	{
 		sockaddr_in sockAddr = BuildSockaddr( hostIp );
 		setsockopt( socketFd, IPPROTO_IP, IP_TTL, &ttl, sizeof( ttl ) );
+		timeval timeout = { 2, 0 };
+		setsockopt( socketFd, SOL_SOCKET, SO_RCVTIMEO, (char*) &timeout, sizeof( timeout ) );
 
-		size_t bytes_sent = sendto( socketFd, content.c_str( ),
+		auto bytes_sent = sendto( socketFd, content.c_str( ),
 				content.length( ), 0, reinterpret_cast<sockaddr*>( &sockAddr ),
 				sizeof( sockAddr ) );
-
+#ifdef DEBUG
+		clog << "content length = " << content.length( ) << endl;
+		clog << "bytes_sent = " << bytes_sent << endl;
+#endif
 		return ( bytes_sent == content.length( ) );
 	}
 
@@ -61,23 +74,30 @@ namespace traceroute
 
 		sockaddr_in sockAddr = BuildSockaddr( hostIp );
 		socklen_t addrLength = sizeof( sockAddr );
-		size_t bytes_recv = recvfrom( socketFd, &( content[ 0 ] ), 65536, 0,
+		auto bytes_recv = recvfrom( socketFd, &( content[ 0 ] ), 65536, 0,
 				reinterpret_cast<sockaddr*>( &sockAddr ), &addrLength );
+#ifdef DEBUG
+		clog << "bytes_recv = " << bytes_recv << endl;
 
+		if( bytes_recv == -1 )
+		{
+			clog << "errno = " << errno << " : " << strerror( errno ) << endl;
+		}
+#endif
 		return ( bytes_recv > 0 );
 	}
 
 	bool IcmpSocket::Recv( ICMP &icmp )
 	{
 		string content;
-		if( not Recv( content ) )
-		{
-			return false;
-		}
-		else
+		if( Recv( content ) )
 		{
 			icmp = ICMP( content );
 			return true;
+		}
+		else
+		{
+			return false;
 		}
 	}
 }
