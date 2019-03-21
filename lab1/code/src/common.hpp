@@ -78,12 +78,11 @@ namespace traceroute
 		}
 	};
 
-	random_device randomDevice;
-	default_random_engine randomEngine
-		= default_random_engine( randomDevice( ) );
-	uniform_int_distribution<uint16_t> randomDistro(0,0xFFFF);
+	extern random_device randomDevice;
+	extern default_random_engine randomEngine;
+	extern uniform_int_distribution<uint16_t> randomDistro;
 
-	auto RandomInt16 = std::bind( randomDistro, randomEngine );
+	uint16_t RandomInt16( );
 
 	void StringAppend( string &data, const uint8_t &value );
 	void StringAppend( string &data, const uint16_t &value );

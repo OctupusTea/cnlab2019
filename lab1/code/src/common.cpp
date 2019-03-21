@@ -7,10 +7,24 @@
 #include <cstdint>
 #include <cstdio>
 
+#ifdef DEBUG
+using std::clog;
+using std::endl;
+#endif
+
 using std::string;
 
 namespace traceroute
 {
+	random_device randomDevice;
+	default_random_engine randomEngine( randomDevice( ) );
+	uniform_int_distribution<uint16_t> randomDistro(0,0xFFFF);
+
+	uint16_t RandomInt16( )
+	{
+		return randomDistro( randomEngine );
+	}
+
 	void StringAppend( string &data, const uint8_t &value )
 	{
 		data += static_cast<char>( value );
@@ -84,7 +98,9 @@ namespace traceroute
 		FILE *dnsPipe = popen( ( "dnsip " + hostName ).c_str( ), "r" );
 		string ipString = string( 16, '\0' );
 		fread( &( ipString[ 0 ] ), 1, 16, dnsPipe );
-
+#ifdef DEBUG
+		clog << "ipString = " << ipString << endl;
+#endif
 		return Ip( ipString );
 	}
 
@@ -93,7 +109,9 @@ namespace traceroute
 		FILE *dnsPipe = popen( ( "dnsname" + to_string( ip ) ).c_str( ), "r" );
 		string hostName = string ( 65536, '\0' );
 		fread( &( hostName[ 0 ] ), 1, 65535, dnsPipe );
-
+#ifdef DEBUG
+		clog << "hostName = " << hostName << endl;
+#endif
 		return hostName;
 	}
 

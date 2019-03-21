@@ -11,15 +11,15 @@ OBJ_DIR=obj
 SRC_DIR=src
 
 # Files
-_TRACEROUTE=traceroute
-_TRACEROUTE_OBJ=traceroute.o
+_TRACEROUTE=traceroute socket icmp common
+_TRACEROUTE_OBJ=traceroute.o socket.o icmp.o common.o
 
 # Directed Files
 TRACEROUTE=$(patsubst %, $(BIN_DIR)/%, $(_TRACEROUTE))
 TRACEROUTE_OBJ=$(patsubst %, $(OBJ_DIR)/%, $(_TRACEROUTE_OBJ))
 
 # Default target: all
-default: all
+default: clean all
 
 # Make all
 all: $(TRACEROUTE)
