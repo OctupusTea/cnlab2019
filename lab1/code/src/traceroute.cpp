@@ -3,6 +3,8 @@
 #include "socket.hpp"
 
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 #include <string>
 #include <chrono>
 #include <vector>
@@ -11,6 +13,7 @@ using namespace std::chrono;
 
 using std::vector;
 using std::string;
+using std::stringstream;
 using std::cin;
 using std::cout;
 using std::clog;
@@ -18,7 +21,7 @@ using std::endl;
 
 #ifdef DEBUG
 
-#define DEBUG_PACKET
+// #define DEBUG_PACKET
 
 #endif
 
@@ -26,6 +29,10 @@ namespace traceroute
 {
 	string targetName;
 	Ip targetIp;
+
+	extern IcmpSocket icmpSocket;
+	uint16_t id;
+	vector<string> output( 4, "" );
 
 	void Usage( )
 	{
@@ -54,6 +61,54 @@ namespace traceroute
 		return Ip( ip );
 	}
 
+	bool RegularPacketHandler( ICMP &icmp, string &ipString,
+			string &timeString )
+	{
+		
+	}
+
+	bool TimeoutPacketHandler( ICMP &icmp, string &ipString,
+			string &timeString )
+	{
+		uint16_t temp = static_cast<uint16_t>( icmp.Data( )[ 44 ] ) << 8;
+		temp += static_cast<uint16_t>( icmp.Data( )[ 45 ] );
+		icmp.Id( temp );
+
+		temp = static_cast<uint16_t>( icmp.Data( )[ 45 ] ) << 8;
+		temp += static_cast<uint16_t>( icmp.Data( )[ 47 ] );
+		icmp.Sequence( temp );
+
+		return RegularPacketHandler( icmp, ipString, timeString );
+	}
+
+	bool SendIcmp( int ttl, int seq, string &ipString, string &timeString )
+	{
+		ICMP icmp_send( id, seq );
+		icmpSocket.Send( icmp_send, ttl );
+
+		ICMP icmp_recv = ICMP( );
+		if( icmpSocket.Recv( icmp_recv ) )
+		{
+			switch( icmp_recv.Type( ) )
+			{
+				case ICMP_TIME_EXCEEDED:
+					return TimeoutPacketHandler( icmp, ipString, timeString );
+				case ICMP_ECHO_REPLY:
+					return RegularPacketHandler( icmp, ipString, timeString );
+				default:
+					clog << "Error / Request Type = "
+						<< int( icmp_recv.Type( ) ) << endl;
+					return false;
+			}
+		}
+		else
+		{
+			ipString = "0.0.0.0";
+			timeString = "*";
+			return false;
+		}
+	}
+
 	int Main( int argc, char **argv )
 	{
 		if( not ParseArg( argc, argv ) )
@@ -62,116 +117,34 @@ namespace traceroute
 			return 1;
 		}
 
-		IcmpSocket icmpSocket( targetIp );	
-		ICMP icmp( 1 );
-		auto initId = icmp.Id( );
+		icmpSocket = IcmpSocket( targetIp );
+		id = RandomInt16( );
 
-		for( int ttl = 1; ttl < 30; ++ttl )
+		for( int ttl = 1; ttl <= 30; ++ttl )
 		{
-			vector<string> output( 4, "" );
+			string ipString, timeString;
 
 			for( int i = 0; i < 3; ++i )
 			{
-				icmp = ICMP( ttl * 3 + i );
-				icmp.Id( initId );
-#ifdef DEBUG_PACKET
-				cout << "icmp============";
-				cout << icmp.Content( ) << "========";
-#endif
-				auto start = system_clock::now( );
-				icmpSocket.Send( icmp, ttl );
-
-				if( icmpSocket.Recv( icmp ) )
+				while( not SendIcmp( ttl, ttl * 3 + i, ipString, timeString ) )
 				{
-#ifdef DEBUG
-					clog << "id = " << icmp.Id( ) << " , " << initId << endl;
-					clog << "seq = " << icmp.Sequence( ) << endl;
-#endif
-					auto end = system_clock::now( );
-					auto duration = duration_cast<microseconds>( end - start );	
-#ifdef DEBUG_PACKET
-					cout << "icmp recv=======";
-					cout << icmp.Content( ).substr( 0, 256 );
-#endif
-					switch( icmp.Type( ) )
-					{
-						case ICMP_ECHO_REPLY:
-						{
-#ifdef DEBUG
-							clog << "icmp normal." << endl;
-#endif
-							if( to_string( IpFromICMP( icmp ) ) != "0.0.0.0" )
-							{
-								output[ 0 ] = to_string( IpFromICMP( icmp ) );
-							}
-							
-							output[ i + 1 ] = to_string( double( duration.count( ) ) / 1000.0 ) + " ms";
-							if( i == 2 )
-							{
-								cout << ttl << ' ';
-								for( int i = 0; i < 4; ++i )
-								{
-									cout << output[ i ] << ' ';
-								}
-								cout << endl;
-								return 0;
-							}
-							break;
-						}
-						
-						case ICMP_TIME_EXCEEDED:
-						{
-#ifdef DEBUG
-							clog << "icmp time exceeded." << endl;
-#endif
-							if( to_string( IpFromICMP( icmp ) ) != "0.0.0.0" )
-							{
-								output[ 0 ] = to_string( IpFromICMP( icmp ) );
-							}
-							
-							output[ i + 1 ] = to_string( double( duration.count( ) ) / 1000.0 ) + " ms";
-							if( i == 2 )
-							{
-								cout << ttl << ' ';
-								for( int i = 0; i < 4; ++i )
-								{
-									cout << output[ i ] << ' ';
-								}
-								cout << endl;
-							}
-							break;
-						}
+					//	empty
+				}
 
-						default:
-						{
-							clog << "Error/Request Type = " << int( icmp.Type( ) )
-								<< endl;
-						}
-						
-					}
-				}
-				else
+				if( ipString != "0.0.0.0" )
 				{
-#ifdef DEBUG
-					clog << "recv failed." << endl;
-#endif
-					if( to_string( IpFromICMP( icmp ) ) != "0.0.0.0" )
-					{
-						output[ 0 ] = to_string( IpFromICMP( icmp ) );
-					}
-					
-					output[ i + 1 ] = "*";
-					if( i == 2 )
-					{
-						cout << ttl << ' ';
-						for( int i = 0; i < 4; ++i )
-						{
-							cout << output[ i ] << ' ';
-						}
-						cout << endl;
-					}
+					output[ 0 ] = ipString;
 				}
+
+				output[ i + 1 ] = timeString;
 			}
+
+			cout << ttl;
+			for( int i = 0; i < 4; ++i )
+			{
+				cout << ' ' << output[ i ];
+			}
+			cout << endl;
 		}
 		return 0;
 	}

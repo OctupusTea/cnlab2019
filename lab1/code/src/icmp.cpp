@@ -18,7 +18,7 @@ using std::string;
 
 #ifdef DEBUG
 
-#define DEBUG_PACKET
+// #define DEBUG_PACKET
 
 #endif
 

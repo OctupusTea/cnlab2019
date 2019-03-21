@@ -50,7 +50,7 @@ namespace traceroute
 	{
 		sockaddr_in sockAddr = BuildSockaddr( hostIp );
 		setsockopt( socketFd, IPPROTO_IP, IP_TTL, &ttl, sizeof( ttl ) );
-		timeval timeout = { 2, 0 };
+		timeval timeout = { 1, 0 };
 		setsockopt( socketFd, SOL_SOCKET, SO_RCVTIMEO, (char*) &timeout, sizeof( timeout ) );
 
 		auto bytes_sent = sendto( socketFd, content.c_str( ),
