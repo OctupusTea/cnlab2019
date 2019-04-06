@@ -1,0 +1,4 @@
+# Create AP
+https://askubuntu.com/questions/318973/how-do-i-create-a-wifi-hotspot-sharing-wireless-internet-connection-single-adap
+https://wiki.archlinux.org/index.php/software_access_point
+`create_ap`
