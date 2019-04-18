@@ -89,6 +89,22 @@ app.get('/admin', (req, res) => {
     }
 });
 
+app.get('/admin/deluser', (req, res) => {
+    let ip = req.query.ip;
+    let index = db.get('authorizedUsers').value().indexOf(ip);
+    if (index == -1) {
+        res.send('ip not found');
+        return;
+    }
+    index = index * 2 + 1;
+    spawn('iptables', ['-t', 'nat', '-D', 'PREROUTING', index]);
+    spawn('iptables', ['-t', 'nat', '-D', 'PREROUTING', index]);
+    spawn('iptables', ['-D', 'FORWARD', index]);
+    spawn('iptables', ['-D', 'FORWARD', index]);
+    res.location('/admin');
+    res.send('user removed');
+});
+
 app.post('/admin/login', (req, res) => {
     console.log(req.body);
     let name = req.body.name;

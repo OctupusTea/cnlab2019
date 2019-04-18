@@ -8,12 +8,13 @@
 <body>
   <h1>Admin</h1>
   <table border='1'>
-    <tr><th>IP</th><th>Sent</th><th>Received</th></tr>
+    <tr><th>IP</th><th>Sent</th><th>Received</th><th></th></tr>
     <% for (let i = 0; i < authorizedUsers.length; ++i) { %>
       <tr>
       <td><%= authorizedUsers[i] %></td>
       <td><%= info[authorizedUsers[i]].sent %></td>
       <td><%= info[authorizedUsers[i]].received %></td>
+      <td><a href='/admin/deluser?ip=<%= authorizedUsers[i] %>'>Remove</a></td>
       </tr>
     <% } %>
   </table>
