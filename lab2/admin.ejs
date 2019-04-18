@@ -7,9 +7,15 @@
 
 <body>
   <h1>Admin</h1>
-  <pre>
-  <%= info %>
-  </pre>
+  <table border='1'>
+    <% for (let i = 0; i < info.length; ++i) { %>
+      <tr>
+        <% for (let j = 0; j < info[i].length; ++j) { %>
+          <td><%= info[i][j] %></td>
+        <% } %>
+      </tr>
+    <% } %>
+  </table>
 </body>
 
 </html>

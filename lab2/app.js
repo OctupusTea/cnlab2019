@@ -3,7 +3,25 @@ const cookieParser = require('cookie-parser')
 const bodyParser = require('body-parser');
 const spawn = require('child_process').spawn;
 const exec = require('child_process').exec;
+const low = require('lowdb');
+const FileSync = require('lowdb/adapters/FileSync')
 
+
+// utils
+function bytesToSize(bytes) {
+       var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+          if (bytes == 0) return '0 Byte';
+             var i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+                return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
+};
+
+// db
+const adapter = new FileSync('db.json')
+const db = low(adapter)
+db.defaults({ authorizedUsers: [] }).write()
+
+
+// express
 let app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser())
@@ -16,10 +34,13 @@ app.post('/login', (req, res) => {
     console.log(ip);
     if (name == 'team16' && password == 'mycnlab') {
         res.send('<h3> success </h3>');
-        spawn('iptables', ['-t', 'nat', '-I', 'PREROUTING', '1', '-s', ip, '-j', 'ACCEPT']);
-        spawn('iptables', ['-t', 'nat', '-I', 'PREROUTING', '1', '-d', ip, '-j', 'ACCEPT']);
-        spawn('iptables', ['-I', 'FORWARD', '-s', ip, '-j', 'ACCEPT']);
-        spawn('iptables', ['-I', 'FORWARD', '-d', ip, '-j', 'ACCEPT']);
+        let index = (db.get('authorizedUsers').value().length * 2 + 1).toString();
+        console.log('index: ' + index);
+        db.get('authorizedUsers').push(ip).write();
+        spawn('iptables', ['-t', 'nat', '-I', 'PREROUTING', index, '-s', ip, '-j', 'ACCEPT']);
+        spawn('iptables', ['-t', 'nat', '-I', 'PREROUTING', index, '-d', ip, '-j', 'ACCEPT']);
+        spawn('iptables', ['-I', 'FORWARD', index, '-s', ip, '-j', 'ACCEPT']);
+        spawn('iptables', ['-I', 'FORWARD', index, '-d', ip, '-j', 'ACCEPT']);
     } else {
         res.send('<h3> wrong password </h3>');
     }
@@ -36,6 +57,14 @@ app.get('/admin', (req, res) => {
             } else {
                 console.log('done');
                 let info = stdout;
+                info = info.split('\n');
+                info.shift();
+                info.shift();
+                info = info.map((rule) => rule.trim().split(/\s+/));
+                let authorizedUsers = db.get('authorizedUsers').value();
+                console.log(authorizedUsers);
+                info = info.filter((rule) => authorizedUsers.indexOf(rule[7]) != -1 || authorizedUsers.indexOf(rule[8]) != -1);
+                info = info.map((rule) => [bytesToSize(rule[1]), rule[7], rule[8]]);
                 console.log(info);
                 res.render(__dirname + '/admin.ejs', {info: info});
             }
@@ -61,9 +90,8 @@ app.post('/admin/login', (req, res) => {
     }
 });
 
-app.get(/\/*/, (req, res) => {
+app.get(/^(?!(admin|login).*).*$/, (req, res) => {
     let hostUrl = req.get('host');
-    console.log(hostUrl);
     if (hostUrl != '10.42.0.1:8888') {
         res.redirect(302, 'http://10.42.0.1:8888');
     }
@@ -74,5 +102,5 @@ app.get(/\/*/, (req, res) => {
 });
 
 let port = 8888;
-app.listen(port);
+app.listen(port, '0.0.0.0');
 console.log(`start listening on port ${port}!`);
