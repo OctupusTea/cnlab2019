@@ -91,11 +91,14 @@ app.get('/admin', (req, res) => {
 
 app.get('/admin/deluser', (req, res) => {
     let ip = req.query.ip;
-    let index = db.get('authorizedUsers').value().indexOf(ip);
+    let authorizedUsers = db.get('authorizedUsers').value();
+    let index = authorizedUsers.indexOf(ip);
     if (index == -1) {
         res.send('ip not found');
         return;
     }
+    authorizedUsers.splice(index, 1);
+    db.set('authorizedUsers', authorizedUsers).write();
     index = index * 2 + 1;
     spawn('iptables', ['-t', 'nat', '-D', 'PREROUTING', index]);
     spawn('iptables', ['-t', 'nat', '-D', 'PREROUTING', index]);
