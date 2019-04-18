@@ -2,6 +2,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser')
 const bodyParser = require('body-parser');
 const spawn = require('child_process').spawn;
+const exec = require('child_process').exec;
 
 let app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -27,8 +28,18 @@ app.post('/login', (req, res) => {
 let cookieToken = 'P6wT`Tt7aJA/@j9#5oqi@';
 app.get('/admin', (req, res) => {
     if (req.cookies.admin == cookieToken) {
-        res.setHeader('Content-type', 'text/html');
-        res.sendFile(__dirname + '/admin.html');
+        let cmd = exec('iptables -L FORWARD -vx', (error, stdout, stderr) => {
+            res.setHeader('Content-type', 'text/html');
+            if (error) {
+                console.error(error);
+                res.send(error);
+            } else {
+                console.log('done');
+                let info = stdout;
+                console.log(info);
+                res.render(__dirname + '/admin.ejs', {info: info});
+            }
+        });
     } else {
         res.setHeader('Content-type', 'text/html');
         res.sendFile(__dirname + '/admin-login.html');
