@@ -8,11 +8,12 @@
 <body>
   <h1>Admin</h1>
   <table border='1'>
-    <% for (let i = 0; i < info.length; ++i) { %>
+    <tr><th>IP</th><th>Sent</th><th>Received</th></tr>
+    <% for (let i = 0; i < authorizedUsers.length; ++i) { %>
       <tr>
-        <% for (let j = 0; j < info[i].length; ++j) { %>
-          <td><%= info[i][j] %></td>
-        <% } %>
+      <td><%= authorizedUsers[i] %></td>
+      <td><%= info[authorizedUsers[i]].sent %></td>
+      <td><%= info[authorizedUsers[i]].received %></td>
       </tr>
     <% } %>
   </table>

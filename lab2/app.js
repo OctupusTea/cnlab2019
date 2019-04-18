@@ -56,17 +56,31 @@ app.get('/admin', (req, res) => {
                 res.send(error);
             } else {
                 console.log('done');
-                let info = stdout;
-                info = info.split('\n');
-                info.shift();
-                info.shift();
-                info = info.map((rule) => rule.trim().split(/\s+/));
+                let data = stdout;
+                data = data.split('\n');
+                data.shift();
+                data.shift();
+                data = data.map((rule) => rule.trim().split(/\s+/));
                 let authorizedUsers = db.get('authorizedUsers').value();
-                console.log(authorizedUsers);
-                info = info.filter((rule) => authorizedUsers.indexOf(rule[7]) != -1 || authorizedUsers.indexOf(rule[8]) != -1);
-                info = info.map((rule) => [bytesToSize(rule[1]), rule[7], rule[8]]);
-                console.log(info);
-                res.render(__dirname + '/admin.ejs', {info: info});
+                let info = {};
+                data.forEach((rule) => {
+                    let ip = '';
+                    let type = '';
+                    if (authorizedUsers.indexOf(rule[7]) != -1) {
+                        ip = rule[7];
+                        type = 'sent';
+                    } else if (authorizedUsers.indexOf(rule[8]) != -1) {
+                        ip = rule[8];
+                        type = 'received';
+                    } else {
+                        return;
+                    }
+                    if (!info[ip]) info[ip] = {};
+                    info[ip][type] = bytesToSize(rule[1]);
+                });
+                data = data.filter((rule) => authorizedUsers.indexOf(rule[7]) != -1 || authorizedUsers.indexOf(rule[8]) != -1);
+                data = data.map((rule) => [bytesToSize(rule[1]), rule[7], rule[8]]);
+                res.render(__dirname + '/admin.ejs', {authorizedUsers: authorizedUsers, info: info});
             }
         });
     } else {
