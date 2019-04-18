@@ -6,6 +6,10 @@ let app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get(/\/*/, (req, res) => {
+    let hostUrl = req.get('host');
+    if (hostUrl != '10.42.0.1') {
+        res.redirect(302, 'http://10.42.0.1');
+    }
     let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     console.log(`${ip} is asking for wifi!`);
     res.setHeader('Content-type', 'text/html');
@@ -18,7 +22,7 @@ app.post('/login', (req, res) => {
     let password = req.body.password;
     let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     console.log(ip);
-    if (true /*name == 'team16' && password == 'mycnlab'*/) {
+    if (name == 'team16' && password == 'mycnlab') {
         res.send('<h3> success </h3>');
         spawn('iptables', ['-t', 'nat', '-I', 'PREROUTING', '1', '-s', ip, '-j', 'ACCEPT']);
         spawn('iptables', ['-t', 'nat', '-I', 'PREROUTING', '1', '-d', ip, '-j', 'ACCEPT']);
