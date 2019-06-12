@@ -20,6 +20,11 @@ def wifi_connect(iface,ssid):
 	process.wait()
 	return process.returncode == 0
 
+def wifi_disconnect(iface,ssid):
+	process = popen(["nmcli", "dev", "disconnect", "ifname", iface])
+	process.wait()
+	return process.returncode == 0
+
 def speedtest():
 	process = popen(["sudo", "./speedtest.sh"])
 	stdout, errout = process.communicate()
@@ -31,15 +36,16 @@ if __name__ == '__main__':
 	config = configparser.ConfigParser()
 	config.read("config.ini")
 	num_retry = 5
+	wifi_interface = "wlx74da38e6c42f"
 
 	best_ssid = ''
 	best_speed = 0
 	for ssid in config.sections():
 		for _ in range(num_retry):
 			print("Connecting to", ssid)
-			if wifi_connect("wlx74da38e6c42f", config[ssid]['file2']):
+			if wifi_connect(wifi_interface, config[ssid]['file2']):
 				print("Connected")
-				popen(["sudo", "./set-app-route.sh", "wlx74da38e6c42f"]).wait()
+				popen(["sudo", "./set-app-route.sh", wifi_interface]).wait()
 				print("Start testing speed...")
 				speed = speedtest()
 				print(ssid + " speed = " + str(speed / 1024 / 1024) + " Mbps")
@@ -51,3 +57,4 @@ if __name__ == '__main__':
 				print("Failed")
 	print("Best wifi is:", best_ssid)
 	wifi_connect("wlx74da38e6c42f", config[best_ssid]['file1'])
+	wifi_disconnect(wifi_interface)
