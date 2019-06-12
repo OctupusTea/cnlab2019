@@ -37,9 +37,9 @@ if __name__ == '__main__':
 	for ssid in config.sections():
 		for _ in range(num_retry):
 			print("Connecting to", ssid)
-			if wifi_connect("wlx74da38f8c758", config[ssid]['file2']):
+			if wifi_connect("wlx74da38e6c42f", config[ssid]['file2']):
 				print("Connected")
-				popen(["sudo", "./set-app-route.sh", "wlx74da38f8c758"]).wait()
+				popen(["sudo", "./set-app-route.sh", "wlx74da38e6c42f"]).wait()
 				print("Start testing speed...")
 				speed = speedtest()
 				print(ssid + " speed = " + str(speed / 1024 / 1024) + " Mbps")
@@ -50,4 +50,4 @@ if __name__ == '__main__':
 			else:
 				print("Failed")
 	print("Best wifi is:", best_ssid)
-	# wifi_connect("wlx74da38e6c42f", config[best_ssid]['file1'])
+	wifi_connect("wlx74da38e6c42f", config[best_ssid]['file1'])
