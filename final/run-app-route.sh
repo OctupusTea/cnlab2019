@@ -1,3 +1,5 @@
+#! /usr/bin/env bash
+
 APPROUTE_LIB_PATH="./mark.so"
 FWMARK=10
 
