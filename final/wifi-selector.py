@@ -3,6 +3,7 @@
 import subprocess
 import configparser
 import json
+import sys
 
 def popen(command):
 	process = subprocess.Popen(command, stdout=subprocess.PIPE)
@@ -20,8 +21,8 @@ def wifi_connect(iface,ssid):
 	process.wait()
 	return process.returncode == 0
 
-def wifi_disconnect(iface,ssid):
-	process = popen(["nmcli", "dev", "disconnect", "ifname", iface])
+def wifi_disconnect(iface):
+	process = popen(["nmcli", "dev", "disconnect", iface])
 	process.wait()
 	return process.returncode == 0
 
@@ -29,14 +30,14 @@ def speedtest():
 	process = popen(["sudo", "./speedtest.sh"])
 	stdout, errout = process.communicate()
 	result = json.loads(stdout)
-	print(result)
+	print(result, file=sys.stderr)
 	return result['download']
 
 if __name__ == '__main__':
 	config = configparser.ConfigParser()
 	config.read("config.ini")
 	num_retry = 5
-	wifi_interface = "wlx74da38e6c42f"
+	wifi_interface = "wlx74da38f8c758"
 
 	best_ssid = ''
 	best_speed = 0
@@ -56,5 +57,5 @@ if __name__ == '__main__':
 			else:
 				print("Failed")
 	print("Best wifi is:", best_ssid)
-	wifi_connect("wlx74da38e6c42f", config[best_ssid]['file1'])
+	wifi_connect("wlp3s0", config[best_ssid]['file1'])
 	wifi_disconnect(wifi_interface)
