@@ -1,0 +1,4 @@
+https://unix.stackexchange.com/questions/210982/bind-unix-program-to-specific-network-interface
+https://developers.redhat.com/blog/2018/10/22/introduction-to-linux-interfaces-for-virtual-networking/#vlan
+NETIF_F_NETNS_LOCAL
+https://docs.pyroute2.org/netns.html
